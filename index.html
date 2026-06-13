@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Netflix — Watch Anywhere</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ─── AUTH OVERLAY ──────────────────────────────────────────────────────── -->
+<div id="auth-overlay" class="auth-overlay">
+  <div class="auth-box">
+    <div class="auth-logo">NETFLIX</div>
+
+    <div id="login-form" class="auth-form active">
+      <h2>Sign In</h2>
+      <p class="auth-sub">Continue watching your favourites</p>
+      <div class="form-group">
+        <input type="email" id="login-email" placeholder="Email address" />
+      </div>
+      <div class="form-group">
+        <input type="password" id="login-password" placeholder="Password" />
+      </div>
+      <div id="login-error" class="auth-error"></div>
+      <button class="btn-auth" onclick="handleLogin()">Sign In</button>
+      <p class="auth-switch">New to Netflix? <span onclick="switchToRegister()">Create account</span></p>
+      <button class="btn-demo" onclick="demoLogin()">Use Demo Account</button>
+    </div>
+
+    <div id="register-form" class="auth-form">
+      <h2>Create Account</h2>
+      <p class="auth-sub">Start watching in minutes</p>
+      <div class="form-group">
+        <input type="text" id="reg-name" placeholder="Full name" />
+      </div>
+      <div class="form-group">
+        <input type="email" id="reg-email" placeholder="Email address" />
+      </div>
+      <div class="form-group">
+        <input type="password" id="reg-password" placeholder="Password" />
+      </div>
+      <div id="reg-error" class="auth-error"></div>
+      <button class="btn-auth" onclick="handleRegister()">Create Account</button>
+      <p class="auth-switch">Already a member? <span onclick="switchToLogin()">Sign in</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MAIN APP ───────────────────────────────────────────────────────────── -->
+<div id="app" class="app hidden">
+
+  <!-- NAV -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-left">
+      <div class="nav-logo">NETFLIX</div>
+      <ul class="nav-links">
+        <li class="active" onclick="showSection('home')">Home</li>
+        <li onclick="showSection('browse')">Browse</li>
+        <li onclick="showSection('watchlist')">My List</li>
+      </ul>
+    </div>
+    <div class="nav-right">
+      <div class="search-bar">
+        <input type="text" id="search-input" placeholder="Search titles…" oninput="debounceSearch()" />
+        <span class="search-icon">⌕</span>
+      </div>
+      <div class="user-menu" id="user-menu">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <div class="user-dropdown">
+          <div class="dropdown-name" id="dropdown-name">User</div>
+          <div class="dropdown-plan" id="dropdown-plan">Standard Plan</div>
+          <hr />
+          <div onclick="showSection('watchlist')">My List</div>
+          <div onclick="showSection('history')">Watch History</div>
+          <hr />
+          <div onclick="handleLogout()" class="logout-btn">Sign Out</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── HOME SECTION ──────────────────────────────────────────────────── -->
+  <section id="section-home" class="section active">
+
+    <!-- Hero -->
+    <div class="hero" id="hero-banner">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="hero-badge">FEATURED</div>
+        <h1 class="hero-title" id="hero-title">Loading…</h1>
+        <p class="hero-desc" id="hero-desc"></p>
+        <div class="hero-meta" id="hero-meta"></div>
+        <div class="hero-actions">
+          <button class="btn-play" onclick="playMovie(currentFeatured)">▶ Play</button>
+          <button class="btn-more" onclick="openModal(currentFeatured)">ⓘ More Info</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rows -->
+    <div class="content-area">
+      <div class="row-section">
+        <h3 class="row-title">Continue Watching</h3>
+        <div class="movie-row" id="row-history"></div>
+      </div>
+      <div class="row-section">
+        <h3 class="row-title">Trending Now</h3>
+        <div class="movie-row" id="row-trending"></div>
+      </div>
+      <div class="row-section">
+        <h3 class="row-title">Top Rated</h3>
+        <div class="movie-row" id="row-top"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── BROWSE SECTION ────────────────────────────────────────────────── -->
+  <section id="section-browse" class="section">
+    <div class="browse-header">
+      <h2>Browse All</h2>
+      <div class="genre-filters" id="genre-filters"></div>
+    </div>
+    <div class="movie-grid" id="browse-grid"></div>
+  </section>
+
+  <!-- ─── WATCHLIST SECTION ─────────────────────────────────────────────── -->
+  <section id="section-watchlist" class="section">
+    <div class="browse-header">
+      <h2>My List</h2>
+      <p class="section-sub">Everything you've saved</p>
+    </div>
+    <div class="movie-grid" id="watchlist-grid"></div>
+    <div id="watchlist-empty" class="empty-state hidden">
+      <div class="empty-icon">📋</div>
+      <h3>Your list is empty</h3>
+      <p>Browse titles and hit + to add them here.</p>
+    </div>
+  </section>
+
+  <!-- ─── HISTORY SECTION ───────────────────────────────────────────────── -->
+  <section id="section-history" class="section">
+    <div class="browse-header">
+      <h2>Watch History</h2>
+      <p class="section-sub">Pick up where you left off</p>
+    </div>
+    <div class="movie-grid" id="history-grid"></div>
+    <div id="history-empty" class="empty-state hidden">
+      <div class="empty-icon">🎬</div>
+      <h3>Nothing watched yet</h3>
+      <p>Start watching to build your history.</p>
+    </div>
+  </section>
+
+</div><!-- /app -->
+
+<!-- ─── MOVIE MODAL ────────────────────────────────────────────────────────── -->
+<div id="movie-modal" class="modal-overlay hidden" onclick="closeModalOnOverlay(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-banner" id="modal-banner"></div>
+    <div class="modal-body">
+      <div class="modal-actions">
+        <button class="btn-play" id="modal-play" onclick="">▶ Play</button>
+        <button class="btn-wl" id="modal-wl" onclick="">+ My List</button>
+      </div>
+      <div class="modal-info">
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-meta" id="modal-meta"></div>
+        <p class="modal-desc" id="modal-desc"></p>
+        <div class="modal-tags" id="modal-tags"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PLAYER OVERLAY ────────────────────────────────────────────────────── -->
+<div id="player-overlay" class="player-overlay hidden">
+  <div class="player-box">
+    <button class="player-close" onclick="closePlayer()">✕</button>
+    <div class="player-screen">
+      <div class="player-placeholder">
+        <div class="play-anim">▶</div>
+        <div class="player-title" id="player-title"></div>
+        <p style="color:#aaa;font-size:13px;margin-top:8px;">Video playback simulation</p>
+      </div>
+      <div class="player-controls">
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <div class="ctrl-row">
+          <span id="ctrl-time">0:00 / 50:00</span>
+          <div class="ctrl-btns">
+            <button onclick="togglePlay()">⏸</button>
+            <button onclick="closePlayer()">■ Stop</button>
+          </div>
+          <span>🔊</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TOAST ──────────────────────────────────────────────────────────────── -->
+<div id="toast" class="toast hidden"></div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
